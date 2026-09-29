@@ -182,6 +182,3 @@ Redis is optional. If it is not configured, the API falls back to an in-memory c
 
 **Release blockers:** production release is blocked until the target framework is upgraded from .NET 6 (end of support) and vulnerable transitive dependencies are fixed, including the critical `System.Drawing.Common 5.0.0`. After upgrading, rerun the verification matrix.
 
-## Documentation
-
-Full design details, contracts and phase audits are in [`PRODUCT_API_DESIGN.md`](./PRODUCT_API_DESIGN.md).

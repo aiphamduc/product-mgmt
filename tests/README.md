@@ -1,0 +1,1 @@
+The integration test project currently covers the public API smoke path. Add login, protected endpoint, and 401/403 cases when authentication endpoints and protected product operations are implemented.

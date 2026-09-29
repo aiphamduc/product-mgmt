@@ -1,0 +1,262 @@
+<section class="editor-shell">
+  <header class="editor-header">
+    <button
+      class="back-button"
+      type="button"
+      (click)="backToList()"
+      aria-label="Back to products"
+    >
+      &#8592; Products
+    </button>
+    <div class="editor-heading">
+      <p class="eyebrow">{{ isNew ? "Catalog intake" : "Catalog record" }}</p>
+      <h1>{{ isNew ? "New product" : product?.name || "Edit product" }}</h1>
+    </div>
+    <button
+      class="primary-button"
+      type="button"
+      [disabled]="isSaving || form.invalid"
+      (click)="save()"
+    >
+      <span aria-hidden="true">✓</span
+      >{{ isSaving ? "Saving..." : "Save product" }}
+    </button>
+  </header>
+
+  <div *ngIf="isLoading" class="state-panel">Loading product...</div>
+  <div *ngIf="errorMessage" class="state-panel error-panel" role="alert">
+    <strong>{{ errorMessage }}</strong
+    ><button class="text-button" type="button" (click)="errorMessage = ''">
+      Dismiss
+    </button>
+  </div>
+  <div *ngIf="conflictMessage" class="state-panel conflict-panel" role="alert">
+    <strong>{{ conflictMessage }}</strong
+    ><button
+      class="secondary-button"
+      type="button"
+      (click)="loadProduct(productId!)"
+    >
+      Reload latest
+    </button>
+  </div>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="save()"
+    *ngIf="!isLoading"
+    class="editor-grid"
+  >
+    <div class="form-column">
+      <section class="form-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Core details</p>
+            <h2>Product identity</h2>
+          </div>
+          <span
+            *ngIf="product"
+            class="status-pill"
+            [ngClass]="'status-' + product.status.toLowerCase()"
+            >{{ product.status }}</span
+          >
+        </div>
+        <div class="field-grid">
+          <label class="wide"
+            >Product name<input
+              formControlName="name"
+              placeholder="Everyday Cotton T-Shirt"
+            /><small
+              *ngIf="form.get('name')?.touched && form.get('name')?.invalid"
+              >Name is required.</small
+            ><small *ngIf="fieldError('Name')">{{
+              fieldError("Name")
+            }}</small></label
+          >
+          <label
+            >Slug<input
+              formControlName="slug"
+              placeholder="everyday-cotton-t-shirt"
+            /><small
+              *ngIf="form.get('slug')?.touched && form.get('slug')?.invalid"
+              >Use lowercase words separated by hyphens.</small
+            ><small *ngIf="fieldError('Slug')">{{
+              fieldError("Slug")
+            }}</small></label
+          >
+          <label
+            >Category ID<input
+              formControlName="categoryId"
+              placeholder="Category GUID"
+            /><small
+              *ngIf="
+                form.get('categoryId')?.touched &&
+                form.get('categoryId')?.invalid
+              "
+              >Category is required.</small
+            ><small *ngIf="fieldError('CategoryId')">{{
+              fieldError("CategoryId")
+            }}</small></label
+          >
+          <label class="wide"
+            >Description<textarea
+              formControlName="description"
+              rows="4"
+              placeholder="Describe the product for internal and catalog use."
+            ></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="form-section" formArrayName="variants">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Sellable units</p>
+            <h2>Variants</h2>
+          </div>
+          <button class="text-button" type="button" (click)="addVariant()">
+            + Add variant
+          </button>
+        </div>
+        <div
+          *ngFor="let variant of variants.controls; let i = index"
+          [formGroupName]="i"
+          class="variant-row"
+        >
+          <div class="variant-index">{{ i + 1 | number: "2.0-0" }}</div>
+          <label
+            >SKU<input formControlName="sku" placeholder="TSHIRT-BLK-M" /><small
+              *ngIf="fieldError('Variants[' + i + '].Sku')"
+              >{{ fieldError("Variants[" + i + "].Sku") }}</small
+            ></label
+          ><label
+            >Price<input
+              type="number"
+              min="0"
+              step="0.01"
+              formControlName="price" /></label
+          ><label>Currency<input formControlName="currency" /></label
+          ><label
+            >Stock<input
+              type="number"
+              min="0"
+              step="1"
+              formControlName="stock" /></label
+          ><button
+            class="remove-button"
+            type="button"
+            (click)="removeVariant(i)"
+            [disabled]="variants.length === 1"
+            aria-label="Remove variant"
+            title="Remove variant"
+          >
+            ×
+          </button>
+        </div>
+      </section>
+
+      <section class="form-section" formArrayName="attributes">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Category schema</p>
+            <h2>Attributes</h2>
+          </div>
+          <button class="text-button" type="button" (click)="addAttribute()">
+            + Add attribute
+          </button>
+        </div>
+        <p class="helper-text">
+          Use the category definition ID and its value. The API validates
+          ownership, requiredness, duplicates, and type.
+        </p>
+        <div
+          *ngFor="let attribute of attributes.controls; let i = index"
+          [formGroupName]="i"
+          class="attribute-row"
+        >
+          <input
+            formControlName="definitionId"
+            placeholder="Attribute definition GUID"
+          /><input formControlName="value" placeholder="Value" /><button
+            class="remove-button"
+            type="button"
+            (click)="removeAttribute(i)"
+            aria-label="Remove attribute"
+          >
+            ×
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <aside class="action-rail">
+      <section class="form-section" *ngIf="product">
+        <p class="eyebrow">Lifecycle</p>
+        <h2>Publish controls</h2>
+        <p class="helper-text">
+          Status changes use the current ETag and are rejected if another
+          operator has saved first.
+        </p>
+        <div class="action-stack">
+          <button
+            class="secondary-button"
+            type="button"
+            [disabled]="!etag"
+            (click)="changeStatus('Published')"
+          >
+            Publish product</button
+          ><button
+            class="secondary-button"
+            type="button"
+            [disabled]="!etag"
+            (click)="changeStatus('Draft')"
+          >
+            Move to draft</button
+          ><button
+            class="danger-button"
+            type="button"
+            [disabled]="!etag"
+            (click)="changeStatus('Archived')"
+          >
+            Archive product
+          </button>
+        </div>
+      </section>
+      <section class="form-section" *ngIf="product">
+        <p class="eyebrow">Inventory</p>
+        <h2>Stock adjustment</h2>
+        <p class="helper-text">
+          Adjustments require an authenticated inventory permission and are
+          audited with an idempotency key.
+        </p>
+        <label
+          >Variant<select
+            [(ngModel)]="selectedVariantIndex"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            <option
+              *ngFor="let variant of product.variants; let i = index"
+              [ngValue]="i"
+            >
+              {{ variant.sku }} · {{ variant.stockOnHand }} units
+            </option>
+          </select></label
+        ><button
+          class="secondary-button full-width"
+          type="button"
+          (click)="adjustStock()"
+        >
+          Adjust stock
+        </button>
+        <p *ngIf="stockMessage" class="action-message">{{ stockMessage }}</p>
+      </section>
+      <section class="version-note" *ngIf="product">
+        <span class="version-dot"></span>
+        <div>
+          <strong>Concurrency protected</strong
+          ><span>ETag: {{ etag || "pending" }}</span>
+        </div>
+      </section>
+    </aside>
+  </form>
+</section>

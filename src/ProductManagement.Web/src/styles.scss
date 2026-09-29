@@ -1,0 +1,24 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap");
+
+:root {
+  font-family: "DM Sans", sans-serif;
+  color: #26342e;
+  background: #f7f8f5;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+body {
+  background:
+    radial-gradient(
+      circle at 15% 0%,
+      rgba(225, 237, 227, 0.7),
+      transparent 36rem
+    ),
+    #f7f8f5;
+}

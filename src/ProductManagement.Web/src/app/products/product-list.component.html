@@ -1,0 +1,145 @@
+<section class="page-shell">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Product operations</p>
+      <h1>Products</h1>
+      <p class="lede">
+        Keep the storefront Product accurate, searchable, and ready to publish.
+      </p>
+    </div>
+    <button class="primary-button" type="button" routerLink="/products/new">
+      <span aria-hidden="true">+</span>
+      New product
+    </button>
+  </header>
+
+  <form class="filter-bar" [formGroup]="filters" (ngSubmit)="applyFilters()">
+    <label class="search-field">
+      <span class="sr-only">Search products</span>
+      <input
+        formControlName="q"
+        type="search"
+        placeholder="Search by product name or slug"
+      />
+    </label>
+    <label>
+      <span>Status</span>
+      <select formControlName="status">
+        <option value="">All statuses</option>
+        <option *ngFor="let status of statuses" [value]="status">
+          {{ status }}
+        </option>
+      </select>
+    </label>
+    <label>
+      <span>Category ID</span>
+      <input formControlName="categoryId" placeholder="Optional GUID" />
+    </label>
+    <label>
+      <span>Sort</span>
+      <select formControlName="sort">
+        <option value="updatedUtc:desc">Recently updated</option>
+        <option value="updatedUtc:asc">Oldest updated</option>
+        <option value="name:asc">Name A-Z</option>
+        <option value="name:desc">Name Z-A</option>
+      </select>
+    </label>
+    <div class="filter-actions">
+      <button class="text-button" type="button" (click)="clearFilters()">
+        Clear
+      </button>
+      <button class="secondary-button" type="submit">Apply filters</button>
+    </div>
+  </form>
+
+  <div class="result-strip">
+    <span>{{ products.length }} products on this page</span>
+    <span *ngIf="isLoading" class="loading-label"
+      ><span class="spinner" aria-hidden="true"></span>Loading</span
+    >
+  </div>
+
+  <div *ngIf="errorMessage" class="state-panel error-panel" role="alert">
+    <span class="state-mark" aria-hidden="true">!</span>
+    <div>
+      <strong>Could not load products</strong>
+      <p>{{ errorMessage }}</p>
+    </div>
+    <button class="text-button" type="button" (click)="load()">Retry</button>
+  </div>
+
+  <div
+    *ngIf="!isLoading && !errorMessage && hasLoaded && products.length === 0"
+    class="state-panel empty-panel"
+  >
+    <span class="state-mark" aria-hidden="true">0</span>
+    <div>
+      <strong>No products found</strong>
+      <p>Try a broader search or clear the active filters.</p>
+    </div>
+  </div>
+
+  <div *ngIf="products.length > 0" class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Status</th>
+          <th>Variants</th>
+          <th>Inventory</th>
+          <th class="align-right">Price from</th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products; trackBy: trackById">
+          <td>
+            <div class="product-cell">
+              <span class="product-avatar"></span>
+              <div>
+                <strong>{{ product.name }}</strong>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="status-pill" [ngClass]="statusClass(product.status)">{{
+              product.status
+            }}</span>
+          </td>
+          <td>{{ product.variants.length }}</td>
+          <td>{{ product.variants | inventoryTotal }}</td>
+          <td class="align-right">
+            {{
+              product.variants
+                | lowestPrice
+                | currency: "USD" : "symbol" : "1.2-2"
+            }}
+          </td>
+          <td class="align-right">
+            <button
+              class="icon-button"
+              type="button"
+              [routerLink]="['/products', product.id, 'edit']"
+              title="Open product"
+              aria-label="Open product"
+            >
+              &#8594;
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer *ngIf="products.length > 0 || nextCursor" class="pagination-bar">
+    <span>Cursor navigation keeps large Products responsive.</span>
+    <button
+      class="secondary-button"
+      type="button"
+      [disabled]="!nextCursor || isLoading"
+      (click)="load(nextCursor || undefined)"
+    >
+      Next page <span aria-hidden="true">&#8594;</span>
+    </button>
+  </footer>
+</section>
